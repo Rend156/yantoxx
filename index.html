@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Register | Load Testing Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        input, button {
+            padding: 10px;
+            margin: 10px;
+            border-radius: 5px;
+            border: none;
+        }
+        .form-container {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-top: 20px;
+        }
+        .link {
+            color: #1e90ff;
+            cursor: pointer;
+        }
+        .loading {
+            display: none;
+        }
+        .notification {
+            background-color: #28a745;
+            color: white;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Welcome to Rendzz's Website</h1>
+
+    <!-- Halaman Login dan Register -->
+    <div id="loginForm" class="form-container">
+        <h2>Login</h2>
+        <input type="text" id="loginUsername" placeholder="Username" required><br>
+        <input type="password" id="loginPassword" placeholder="Password" required><br>
+        <button onclick="login()">Login</button><br>
+        <span class="link" onclick="showRegister()">Don't have an account? Register</span>
+    </div>
+
+    <div id="registerForm" class="form-container" style="display:none;">
+        <h2>Register</h2>
+        <input type="text" id="registerUsername" placeholder="Username" required><br>
+        <input type="password" id="registerPassword" placeholder="Password" required><br>
+        <button onclick="register()">Register</button><br>
+        <span class="link" onclick="showLogin()">Already have an account? Login</span>
+    </div>
+
+    <!-- Halaman Load Testing Tool -->
+    <div id="loadTestingForm" class="form-container" style="display:none;">
+        <h1>Load Testing Tool</h1>
+        <input type="text" id="targetUrl" placeholder="Enter target URL" style="width: 80%;">
+        <input type="number" id="requestCount" placeholder="Number of requests" style="width: 80%;">
+        <button onclick="startLoadTest()">Start Load Test</button>
+        <div class="loading" id="loading">Sending requests...</div>
+    </div>
+
+    <!-- Notifikasi Login -->
+    <div id="loginNotification" class="notification">
+        Login berhasil! Anda sekarang terhubung.
+    </div>
+
+    <script>
+        // Fungsi Login
+        function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+            
+            const user = users.find(user => user.username === username && user.password === password);
+            
+            if (user) {
+                // Menampilkan notifikasi login berhasil
+                document.getElementById('loginNotification').style.display = 'block';
+                
+                // Simpan status login pengguna di localStorage
+                localStorage.setItem('loggedIn', true);
+                setTimeout(() => {
+                    document.getElementById('loginNotification').style.display = 'none';
+                }, 3000); // Notifikasi menghilang setelah 3 detik
+
+                showLoadTestingForm(); // Tampilkan halaman Load Testing
+            } else {
+                alert('Username atau password salah.');
+            }
+        }
+
+        // Fungsi Register
+        function register() {
+            const username = document.getElementById('registerUsername').value;
+            const password = document.getElementById('registerPassword').value;
+            const users = JSON.parse(localStorage.getItem('users')) || [];
+
+            if (users.some(user => user.username === username)) {
+                alert('Username sudah terdaftar.');
+            } else {
+                users.push({ username, password });
+                localStorage.setItem('users', JSON.stringify(users));
+                alert('Register sukses! Silakan login.');
+                showLogin(); // Kembali ke halaman login setelah register
+            }
+        }
+
+        // Fungsi Tampilkan Halaman Login
+        function showLogin() {
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loadTestingForm').style.display = 'none';
+        }
+
+        // Fungsi Tampilkan Halaman Register
+        function showRegister() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('loadTestingForm').style.display = 'none';
+        }
+
+        // Fungsi Tampilkan Halaman Load Testing
+        function showLoadTestingForm() {
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('loadTestingForm').style.display = 'block';
+        }
+
+        // Fungsi untuk memulai Load Test
+        function startLoadTest() {
+            const url = document.getElementById('targetUrl').value;
+            const count = parseInt(document.getElementById('requestCount').value);
+            const loading = document.getElementById('loading');
+
+            if (!url || count <= 0) {
+                alert('Please enter a valid URL and number of requests.');
+                return;
+            }
+
+            loading.style.display = 'block';
+
+            for (let i = 0; i < count; i++) {
+                fetch(url).then(response => {
+                    console.log(`Request ${i+1} status: `, response.status);
+                }).catch(error => {
+                    console.error(`Request ${i+1} failed: `, error);
+                });
+            }
+
+            setTimeout(() => {
+                loading.style.display = 'none';
+                alert('Load test completed.');
+            }, 5000); // Simulated duration
+        }
+
+        // Cek status login saat halaman dimuat
+        window.onload = function() {
+            if (localStorage.getItem('loggedIn')) {
+                showLoadTestingForm();
+            } else {
+                showLogin();
+            }
+        };
+    </script>
+
+</body>
+</html>
